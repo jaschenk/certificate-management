@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue Certificate | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Issue Certificate</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/certificates}">Certificates</a> <span>/</span> <span>Issue New</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(activeCas)}" class="alert alert-warning">
+                <span>⚠️</span> No active Certificate Authorities available. <a th:href="@{/ca/create}">Create a CA first</a>.
+            </div>
+
+            <form th:action="@{/certificates/create}" method="post" th:unless="${#lists.isEmpty(activeCas)}">
+                <!-- Issuing CA & Type -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔧 Certificate Configuration</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Issuing CA <span class="required">*</span></label>
+                            <select name="issuingCaId" class="form-control" required>
+                                <option value="">-- Select CA --</option>
+                                <option th:each="ca : ${activeCas}" th:value="${ca.id}"
+                                        th:text="${ca.name + ' (' + ca.commonName + ')'}"
+                                        th:selected="${param.issuingCaId != null and param.issuingCaId.toString() == ca.id.toString()}">CA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Certificate Type <span class="required">*</span></label>
+                            <select name="certificateType" class="form-control" required>
+                                <option th:each="type : ${certificateTypes}"
+                                        th:if="${type.name() != 'ROOT_CA' and type.name() != 'INTERMEDIATE_CA'}"
+                                        th:value="${type}" th:text="${type.displayName}">Type</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Key Algorithm <span class="required">*</span></label>
+                            <select name="keyAlgorithm" class="form-control" required>
+                                <option th:each="alg : ${keyAlgorithms}" th:value="${alg}" th:text="${alg.displayName}"
+                                        th:selected="${alg.name() == 'RSA_4096'}">Algorithm</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Validity (Days)</label>
+                            <input type="number" name="validityDays" class="form-control" value="365" min="1" max="3650">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject DN -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Subject Distinguished Name</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Common Name (CN) <span class="required">*</span></label>
+                            <input type="text" name="commonName" class="form-control" placeholder="e.g. www.example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Organization (O)</label>
+                            <input type="text" name="organization" class="form-control" placeholder="e.g. Example Inc.">
+                        </div>
+                        <div class="form-group">
+                            <label>Organizational Unit (OU)</label>
+                            <input type="text" name="organizationalUnit" class="form-control" placeholder="e.g. Engineering">
+                        </div>
+                        <div class="form-group">
+                            <label>Locality (L)</label>
+                            <input type="text" name="locality" class="form-control" placeholder="e.g. San Francisco">
+                        </div>
+                        <div class="form-group">
+                            <label>State (ST)</label>
+                            <input type="text" name="state" class="form-control" placeholder="e.g. California">
+                        </div>
+                        <div class="form-group">
+                            <label>Country (C)</label>
+                            <input type="text" name="country" class="form-control" placeholder="e.g. US" maxlength="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SANs -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🌐 Subject Alternative Names (SAN)</h3>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>SANs (comma-separated: DNS names, IPs, emails)</label>
+                        <input type="text" name="subjectAltNames" class="form-control"
+                               placeholder="e.g. www.example.com, api.example.com, 192.168.1.1, admin@example.com">
+                        <small class="text-muted">DNS names, IPv4 addresses, and email addresses are automatically detected.</small>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-success">📜 Issue Certificate</button>
+                    <a th:href="@{/certificates}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

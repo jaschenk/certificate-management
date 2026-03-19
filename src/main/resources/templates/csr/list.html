@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSR Requests | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Certificate Signing Requests</h2>
+            <a th:href="@{/csr/submit}" class="btn btn-primary">+ Submit CSR</a>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <div th:if="${pendingCount > 0}" class="alert alert-info">
+                <span>📝</span> <strong th:text="${pendingCount}">0</strong> request(s) pending review.
+            </div>
+
+            <div th:if="${#lists.isEmpty(requests)}" class="empty-state">
+                <div class="empty-icon">📝</div>
+                <h3>No CSR Requests</h3>
+                <p>Submit a Certificate Signing Request to get started.</p>
+                <a th:href="@{/csr/submit}" class="btn btn-primary">+ Submit CSR</a>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(requests)}" class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Common Name</th>
+                                <th>Type</th>
+                                <th>Requester</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="req : ${requests}">
+                                <td>
+                                    <a th:href="@{/csr/{id}(id=${req.id})}" th:text="${req.commonName}" style="font-weight:600;">cn</a>
+                                </td>
+                                <td><span class="badge-type" th:text="${req.requestedType.displayName}">Server</span></td>
+                                <td th:text="${req.requesterName != null ? req.requesterName : '-'}">requester</td>
+                                <td>
+                                    <span class="badge-status"
+                                          th:classappend="${req.requestStatus.name() == 'PENDING' ? 'badge-pending' :
+                                                           (req.requestStatus.name() == 'APPROVED' ? 'badge-active' : 'badge-expired')}"
+                                          th:text="${req.requestStatus.displayName}">Pending</span>
+                                </td>
+                                <td class="text-mono" th:text="${#temporals.format(req.createdAt, 'yyyy-MM-dd HH:mm')}">date</td>
+                                <td>
+                                    <a th:href="@{/csr/{id}(id=${req.id})}" class="btn btn-sm btn-outline">View</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

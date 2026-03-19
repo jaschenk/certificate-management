@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificates | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Certificates</h2>
+            <a th:href="@{/certificates/create}" class="btn btn-primary">+ Issue Certificate</a>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="card" style="padding:16px 24px;">
+                <form th:action="@{/certificates}" method="get" class="search-bar">
+                    <input type="text" name="search" class="form-control" placeholder="Search by Common Name..."
+                           th:value="${search}">
+                    <button type="submit" class="btn btn-primary btn-sm">🔍 Search</button>
+                    <a th:href="@{/certificates}" class="btn btn-outline btn-sm">Clear</a>
+                </form>
+                <div class="btn-group" style="margin-top:8px;">
+                    <a th:href="@{/certificates}" class="btn btn-sm" th:classappend="${filterStatus == null ? 'btn-primary' : 'btn-outline'}">All</a>
+                    <a th:each="s : ${statuses}" th:href="@{/certificates(status=${s})}"
+                       class="btn btn-sm" th:classappend="${filterStatus != null and filterStatus.name() == s.name() ? 'btn-primary' : 'btn-outline'}"
+                       th:text="${s.displayName}">Status</a>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(certificates)}" class="empty-state">
+                <div class="empty-icon">📜</div>
+                <h3>No Certificates Found</h3>
+                <p>Issue your first certificate or adjust your search filters.</p>
+                <a th:href="@{/certificates/create}" class="btn btn-primary">+ Issue Certificate</a>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(certificates)}" class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Common Name</th>
+                                <th>Type</th>
+                                <th>Issuing CA</th>
+                                <th>Algorithm</th>
+                                <th>Serial</th>
+                                <th>Status</th>
+                                <th>Valid Until</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="cert : ${certificates}">
+                                <td>
+                                    <a th:href="@{/certificates/{id}(id=${cert.id})}" th:text="${cert.commonName}" style="font-weight:600;">cn</a>
+                                </td>
+                                <td><span class="badge-type" th:text="${cert.certificateType.displayName}">Server</span></td>
+                                <td>
+                                    <a th:href="@{/ca/{id}(id=${cert.issuingCa.id})}" th:text="${cert.issuingCa.name}">CA</a>
+                                </td>
+                                <td class="text-mono" style="font-size:0.78rem;" th:text="${cert.keyAlgorithm.displayName}">RSA 4096</td>
+                                <td class="text-mono" style="font-size:0.78rem;" th:text="${cert.serialNumber}">02</td>
+                                <td>
+                                    <span class="badge-status"
+                                          th:classappend="${cert.status.name() == 'ACTIVE' ? 'badge-active' :
+                                                           (cert.status.name() == 'EXPIRED' ? 'badge-expired' :
+                                                           (cert.status.name() == 'REVOKED' ? 'badge-revoked' : 'badge-pending'))}"
+                                          th:text="${cert.status.displayName}">Active</span>
+                                </td>
+                                <td class="text-mono" th:text="${#temporals.format(cert.notAfter, 'yyyy-MM-dd')}">2025-01-01</td>
+                                <td>
+                                    <a th:href="@{/certificates/{id}(id=${cert.id})}" class="btn btn-sm btn-outline">View</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

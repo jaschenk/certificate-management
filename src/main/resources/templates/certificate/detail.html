@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Certificate: ' + ${cert.commonName} + ' | CertMan'">Certificate Detail | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2 th:text="${cert.commonName}">CN</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/certificates}">Certificates</a> <span>/</span> <span th:text="${cert.commonName}">CN</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <!-- Certificate Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📜 Certificate Details</h3>
+                    <span class="badge-status"
+                          th:classappend="${cert.status.name() == 'ACTIVE' ? 'badge-active' :
+                                           (cert.status.name() == 'EXPIRED' ? 'badge-expired' :
+                                           (cert.status.name() == 'REVOKED' ? 'badge-revoked' : 'badge-pending'))}"
+                          th:text="${cert.status.displayName}">Active</span>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Common Name</div>
+                        <div class="detail-value" th:text="${cert.commonName}">cn</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Certificate Type</div>
+                        <div class="detail-value"><span class="badge-type" th:text="${cert.certificateType.displayName}">Server</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Subject DN</div>
+                        <div class="detail-value mono" th:text="${cert.subjectDn}">CN=...</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Issuing CA</div>
+                        <div class="detail-value">
+                            <a th:href="@{/ca/{id}(id=${cert.issuingCa.id})}" th:text="${cert.issuingCa.name}">CA</a>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Key Algorithm</div>
+                        <div class="detail-value" th:text="${cert.keyAlgorithm.displayName}">RSA 4096</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Signature Algorithm</div>
+                        <div class="detail-value mono" th:text="${cert.signatureAlgorithm}">SHA384withRSA</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Serial Number</div>
+                        <div class="detail-value mono" th:text="${cert.serialNumber}">02</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">SHA-256 Thumbprint</div>
+                        <div class="detail-value mono" style="font-size:0.72rem;" th:text="${cert.thumbprintSha256}">hash</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valid From</div>
+                        <div class="detail-value" th:text="${#temporals.format(cert.notBefore, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valid Until</div>
+                        <div class="detail-value" th:text="${#temporals.format(cert.notAfter, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item" th:if="${cert.subjectAlternativeNames != null and !cert.subjectAlternativeNames.isEmpty()}">
+                        <div class="detail-label">Subject Alternative Names</div>
+                        <div class="detail-value mono" th:text="${cert.subjectAlternativeNames}">SANs</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Key Usage</div>
+                        <div class="detail-value" th:text="${cert.keyUsage}">digitalSignature</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Extended Key Usage</div>
+                        <div class="detail-value" th:text="${cert.extendedKeyUsage}">serverAuth</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Created</div>
+                        <div class="detail-value" th:text="${#temporals.format(cert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item" th:if="${cert.revoked}">
+                        <div class="detail-label">Revoked At</div>
+                        <div class="detail-value text-danger" th:text="${#temporals.format(cert.revokedAt, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item" th:if="${cert.revoked}">
+                        <div class="detail-label">Revocation Reason</div>
+                        <div class="detail-value text-danger" th:text="${cert.revocationReason.displayName}">reason</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download & Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>⬇️ Download & Export</h3>
+                </div>
+                <div class="btn-group" style="margin-bottom:16px;">
+                    <a th:href="@{/certificates/{id}/download/pem(id=${cert.id})}" class="btn btn-outline">📄 Certificate (PEM)</a>
+                    <a th:href="@{/certificates/{id}/download/chain(id=${cert.id})}" class="btn btn-outline">🔗 Full Chain (PEM)</a>
+                    <a th:href="@{/certificates/{id}/download/der(id=${cert.id})}" class="btn btn-outline">💾 Certificate (DER)</a>
+                    <a th:if="${cert.privateKeyPem != 'EXTERNAL_CSR_NO_PRIVATE_KEY'}"
+                       th:href="@{/certificates/{id}/download/key(id=${cert.id})}" class="btn btn-outline">🔑 Private Key (PEM)</a>
+                </div>
+
+                <!-- PKCS#12 Download -->
+                <div th:if="${cert.privateKeyPem != 'EXTERNAL_CSR_NO_PRIVATE_KEY'}" style="border-top:1px solid var(--border-color); padding-top:16px;">
+                    <h4 style="font-size:0.9rem; margin-bottom:10px;">📦 PKCS#12 / PFX Export</h4>
+                    <form th:action="@{/certificates/{id}/download/pkcs12(id=${cert.id})}" method="post" style="display:flex; gap:10px; align-items:flex-end;">
+                        <div class="form-group mb-0" style="flex:1; max-width:300px;">
+                            <label>Export Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Enter password for .p12 file" required minlength="4">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">⬇️ Export PKCS#12</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Revoke / Renew Actions -->
+            <div class="card" th:if="${cert.status.name() == 'ACTIVE'}">
+                <div class="card-header">
+                    <h3>⚡ Certificate Actions</h3>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <!-- Renew -->
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px;">🔄 Renew Certificate</h4>
+                        <p class="text-muted" style="font-size:0.82rem; margin-bottom:10px;">Issue a new certificate with the same parameters. The current certificate will be revoked as superseded.</p>
+                        <form th:action="@{/certificates/{id}/renew(id=${cert.id})}" method="post" style="display:flex; gap:10px; align-items:flex-end;">
+                            <div class="form-group mb-0">
+                                <label>New Validity (Days)</label>
+                                <input type="number" name="validityDays" class="form-control" value="365" min="1" max="3650" style="width:150px;">
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm">🔄 Renew</button>
+                        </form>
+                    </div>
+
+                    <!-- Revoke -->
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px;">🚫 Revoke Certificate</h4>
+                        <p class="text-muted" style="font-size:0.82rem; margin-bottom:10px;">Permanently revoke this certificate. This action cannot be undone.</p>
+                        <form th:action="@{/certificates/{id}/revoke(id=${cert.id})}" method="post" style="display:flex; gap:10px; align-items:flex-end;"
+                              onsubmit="return confirm('Are you sure you want to revoke this certificate? This cannot be undone.');">
+                            <div class="form-group mb-0">
+                                <label>Reason</label>
+                                <select name="reason" class="form-control" style="width:220px;">
+                                    <option th:each="r : ${revocationReasons}" th:value="${r}" th:text="${r.displayName}">Reason</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-sm">🚫 Revoke</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate PEM -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📄 Certificate (PEM)</h3>
+                </div>
+                <div class="pem-block" th:text="${cert.certificatePem}">-----BEGIN CERTIFICATE-----</div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

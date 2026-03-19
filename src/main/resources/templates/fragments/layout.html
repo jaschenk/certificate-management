@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' | CertMan' : 'CertMan - Certificate Management'}">CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" th:fragment="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🔐</div>
+            <div>
+                <h1>CertMan <span class="version">v1.0</span></h1>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <a th:href="@{/dashboard}" class="nav-item" th:classappend="${activePage == 'dashboard'} ? 'active'">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">PKI Management</div>
+                <a th:href="@{/ca}" class="nav-item" th:classappend="${activePage == 'ca'} ? 'active'">
+                    <span class="nav-icon">🏛️</span>
+                    <span>Certificate Authorities</span>
+                </a>
+                <a th:href="@{/certificates}" class="nav-item" th:classappend="${activePage == 'certificates'} ? 'active'">
+                    <span class="nav-icon">📜</span>
+                    <span>Certificates</span>
+                </a>
+                <a th:href="@{/csr}" class="nav-item" th:classappend="${activePage == 'csr'} ? 'active'">
+                    <span class="nav-icon">📝</span>
+                    <span>CSR Requests</span>
+                    <span class="badge" th:if="${pendingCsrCount != null and pendingCsrCount > 0}" th:text="${pendingCsrCount}">0</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <a th:href="@{/h2-console}" class="nav-item" target="_blank">
+                    <span class="nav-icon">🗄️</span>
+                    <span>Database Console</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div th:fragment="content">
+            <!-- Page content injected here -->
+        </div>
+    </main>
+</div>
+</body>
+</html>

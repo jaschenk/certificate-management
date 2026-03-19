@@ -1,0 +1,77 @@
+server:
+  port: 8443
+  servlet:
+    context-path: /certman
+
+spring:
+  application:
+    name: Certificate Management Service
+  
+  # Thymeleaf Configuration
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+
+  # Database Configuration (H2 for dev, swap to PostgreSQL for prod)
+  datasource:
+    url: jdbc:h2:file:./data/certmandb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+# Certificate Management Configuration
+certman:
+  # Default key algorithm settings
+  defaults:
+    key-algorithm: RSA
+    key-size: 4096
+    signature-algorithm: SHA384withRSA
+    validity-days: 365
+    ca-validity-days: 3650
+  
+  # Storage for generated keystores
+  keystore:
+    base-path: ./data/keystores
+  
+  # CRL Configuration
+  crl:
+    distribution-point: http://localhost:8443/certman/api/v1/crl
+    update-interval-hours: 24
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  info:
+    env:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    com.certman: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

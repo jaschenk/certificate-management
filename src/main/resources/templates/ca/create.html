@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create CA | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Create Certificate Authority</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/ca}">Certificate Authorities</a> <span>/</span> <span>Create</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <form th:action="@{/ca/create}" method="post">
+                <!-- CA Configuration -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🏛️ CA Configuration</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>CA Name <span class="required">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. My Root CA" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Parent CA (leave empty for Root CA)</label>
+                            <select name="parentCaId" class="form-control">
+                                <option value="">-- Root CA (Self-Signed) --</option>
+                                <option th:each="pca : ${activeCas}" th:value="${pca.id}" th:text="${pca.name}">Parent CA</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject DN -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Subject Distinguished Name</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Common Name (CN) <span class="required">*</span></label>
+                            <input type="text" name="commonName" class="form-control" placeholder="e.g. My Organization Root CA" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Organization (O)</label>
+                            <input type="text" name="organization" class="form-control" placeholder="e.g. My Organization Inc.">
+                        </div>
+                        <div class="form-group">
+                            <label>Organizational Unit (OU)</label>
+                            <input type="text" name="organizationalUnit" class="form-control" placeholder="e.g. IT Security">
+                        </div>
+                        <div class="form-group">
+                            <label>Locality (L)</label>
+                            <input type="text" name="locality" class="form-control" placeholder="e.g. San Francisco">
+                        </div>
+                        <div class="form-group">
+                            <label>State (ST)</label>
+                            <input type="text" name="state" class="form-control" placeholder="e.g. California">
+                        </div>
+                        <div class="form-group">
+                            <label>Country (C)</label>
+                            <input type="text" name="country" class="form-control" placeholder="e.g. US" maxlength="2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key & Validity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔑 Key & Validity Settings</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Key Algorithm <span class="required">*</span></label>
+                            <select name="keyAlgorithm" class="form-control" required>
+                                <option th:each="alg : ${keyAlgorithms}" th:value="${alg}" th:text="${alg.displayName}"
+                                        th:selected="${alg.name() == 'RSA_4096'}">Algorithm</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Validity (Days)</label>
+                            <input type="number" name="validityDays" class="form-control" value="3650" min="1" max="36500">
+                        </div>
+                        <div class="form-group">
+                            <label>Path Length Constraint</label>
+                            <input type="number" name="pathLengthConstraint" class="form-control" value="-1" min="-1" max="10">
+                            <small class="text-muted">-1 = unlimited, 0 = can only issue end-entity certs</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">🏛️ Create Certificate Authority</button>
+                    <a th:href="@{/ca}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

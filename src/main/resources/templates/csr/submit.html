@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit CSR | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Submit Certificate Signing Request</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/csr}">CSR Requests</a> <span>/</span> <span>Submit</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <form th:action="@{/csr/submit}" method="post">
+                <!-- CSR PEM -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📄 CSR Content (PKCS#10 PEM)</h3>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Paste your PEM-encoded CSR <span class="required">*</span></label>
+                        <textarea name="csrPem" class="form-control" rows="10" required
+                                  placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;MIICvDCCAaQCAQ...&#10;-----END CERTIFICATE REQUEST-----"></textarea>
+                        <small class="text-muted">Generate a CSR using: <code>openssl req -new -newkey rsa:4096 -keyout key.pem -out csr.pem -nodes</code></small>
+                    </div>
+                </div>
+
+                <!-- Request Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Request Information</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Common Name (CN) <span class="required">*</span></label>
+                            <input type="text" name="commonName" class="form-control" placeholder="e.g. www.example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Certificate Type <span class="required">*</span></label>
+                            <select name="requestedType" class="form-control" required>
+                                <option th:each="type : ${certificateTypes}"
+                                        th:if="${type.name() != 'ROOT_CA' and type.name() != 'INTERMEDIATE_CA'}"
+                                        th:value="${type}" th:text="${type.displayName}">Type</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Organization (O)</label>
+                            <input type="text" name="organization" class="form-control" placeholder="e.g. Example Inc.">
+                        </div>
+                        <div class="form-group">
+                            <label>Organizational Unit (OU)</label>
+                            <input type="text" name="organizationalUnit" class="form-control" placeholder="e.g. Engineering">
+                        </div>
+                        <div class="form-group">
+                            <label>Locality (L)</label>
+                            <input type="text" name="locality" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>State (ST)</label>
+                            <input type="text" name="state" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Country (C)</label>
+                            <input type="text" name="country" class="form-control" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label>Requested Validity (Days)</label>
+                            <input type="number" name="validityDays" class="form-control" value="365" min="1" max="3650">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject Alternative Names (comma-separated)</label>
+                        <input type="text" name="subjectAltNames" class="form-control"
+                               placeholder="e.g. www.example.com, api.example.com">
+                    </div>
+                </div>
+
+                <!-- Requester Info -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👤 Requester Information</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Your Name</label>
+                            <input type="text" name="requesterName" class="form-control" placeholder="e.g. John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Your Email</label>
+                            <input type="email" name="requesterEmail" class="form-control" placeholder="e.g. john@example.com">
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Notes / Justification</label>
+                        <textarea name="notes" class="form-control" rows="3" style="font-family:inherit;"
+                                  placeholder="Provide any additional context for the CA administrator..."></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">📝 Submit CSR for Review</button>
+                    <a th:href="@{/csr}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

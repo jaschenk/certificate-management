@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:certman-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+certman:
+  defaults:
+    key-algorithm: RSA
+    key-size: 4096
+    signature-algorithm: SHA384withRSA
+    validity-days: 365
+    ca-validity-days: 3650
+  crl:
+    distribution-point: http://localhost:8443/certman/api/v1/crl
+    update-interval-hours: 24
+
+logging:
+  level:
+    com.certman: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

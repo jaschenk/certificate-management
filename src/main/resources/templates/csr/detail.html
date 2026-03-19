@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'CSR: ' + ${request.commonName} + ' | CertMan'">CSR Detail | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2 th:text="'CSR: ' + ${request.commonName}">CSR</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/csr}">CSR Requests</a> <span>/</span> <span th:text="${request.commonName}">CN</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <!-- Request Details -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📝 Request Details</h3>
+                    <span class="badge-status"
+                          th:classappend="${request.requestStatus.name() == 'PENDING' ? 'badge-pending' :
+                                           (request.requestStatus.name() == 'APPROVED' ? 'badge-active' : 'badge-expired')}"
+                          th:text="${request.requestStatus.displayName}">Pending</span>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Common Name</div>
+                        <div class="detail-value" th:text="${request.commonName}">cn</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Requested Type</div>
+                        <div class="detail-value"><span class="badge-type" th:text="${request.requestedType.displayName}">Server</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Subject DN</div>
+                        <div class="detail-value mono" th:text="${request.subjectDn}">CN=...</div>
+                    </div>
+                    <div class="detail-item" th:if="${request.subjectAlternativeNames != null and !request.subjectAlternativeNames.isEmpty()}">
+                        <div class="detail-label">SANs</div>
+                        <div class="detail-value mono" th:text="${request.subjectAlternativeNames}">SANs</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Requested Validity</div>
+                        <div class="detail-value" th:text="${request.requestedValidityDays + ' days'}">365 days</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Requester</div>
+                        <div class="detail-value" th:text="${(request.requesterName != null ? request.requesterName : 'N/A') + (request.requesterEmail != null ? ' (' + request.requesterEmail + ')' : '')}">requester</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Submitted</div>
+                        <div class="detail-value" th:text="${#temporals.format(request.createdAt, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item" th:if="${request.processedAt != null}">
+                        <div class="detail-label">Processed</div>
+                        <div class="detail-value" th:text="${#temporals.format(request.processedAt, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item" th:if="${request.notes != null and !request.notes.isEmpty()}">
+                        <div class="detail-label">Notes</div>
+                        <div class="detail-value" th:text="${request.notes}">notes</div>
+                    </div>
+                    <div class="detail-item" th:if="${request.rejectionReason != null}">
+                        <div class="detail-label">Rejection Reason</div>
+                        <div class="detail-value text-danger" th:text="${request.rejectionReason}">reason</div>
+                    </div>
+                    <div class="detail-item" th:if="${request.issuedCertificate != null}">
+                        <div class="detail-label">Issued Certificate</div>
+                        <div class="detail-value">
+                            <a th:href="@{/certificates/{id}(id=${request.issuedCertificate.id})}" class="btn btn-sm btn-success">View Issued Certificate →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approve / Reject (only if PENDING) -->
+            <div class="card" th:if="${request.requestStatus.name() == 'PENDING'}">
+                <div class="card-header">
+                    <h3>⚡ Review Actions</h3>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+                    <!-- Approve -->
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color: var(--accent-green);">✅ Approve & Sign</h4>
+                        <form th:action="@{/csr/{id}/approve(id=${request.id})}" method="post">
+                            <div class="form-group">
+                                <label>Issuing CA <span class="required">*</span></label>
+                                <select name="issuingCaId" class="form-control" required>
+                                    <option value="">-- Select CA --</option>
+                                    <option th:each="ca : ${activeCas}" th:value="${ca.id}"
+                                            th:text="${ca.name + ' (' + ca.commonName + ')'}">CA</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Validity (Days)</label>
+                                <input type="number" name="validityDays" class="form-control"
+                                       th:value="${request.requestedValidityDays}" min="1" max="3650">
+                            </div>
+                            <button type="submit" class="btn btn-success">✅ Approve & Issue Certificate</button>
+                        </form>
+                    </div>
+
+                    <!-- Reject -->
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color: var(--accent-red);">❌ Reject</h4>
+                        <form th:action="@{/csr/{id}/reject(id=${request.id})}" method="post"
+                              onsubmit="return confirm('Are you sure you want to reject this CSR?');">
+                            <div class="form-group">
+                                <label>Rejection Reason <span class="required">*</span></label>
+                                <textarea name="reason" class="form-control" rows="3" style="font-family:inherit;" required
+                                          placeholder="Provide a reason for rejecting this request..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger">❌ Reject Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSR PEM -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📄 CSR (PEM)</h3>
+                </div>
+                <div class="pem-block" th:text="${request.csrPem}">-----BEGIN CERTIFICATE REQUEST-----</div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

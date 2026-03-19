@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2>Dashboard</h2>
+            <div class="breadcrumb">
+                <span>🏠</span> <span>Overview</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">🏛️</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.totalCas()}">0</div>
+                        <div class="stat-label">Certificate Authorities</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">📜</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.activeCertificates()}">0</div>
+                        <div class="stat-label">Active Certificates</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">⏰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.expiringWithin30Days()}">0</div>
+                        <div class="stat-label">Expiring Within 30 Days</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">🚫</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.revokedCertificates()}">0</div>
+                        <div class="stat-label">Revoked Certificates</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">📝</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.pendingRequests()}">0</div>
+                        <div class="stat-label">Pending CSR Requests</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon cyan">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" th:text="${stats.totalCertificates()}">0</div>
+                        <div class="stat-label">Total Certificates</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Expiring Soon -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>⏰ Expiring Soon</h3>
+                        <a th:href="@{/certificates}" class="btn btn-sm btn-outline">View All</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(expiringCerts)}" class="empty-state" style="padding:30px;">
+                        <p>No certificates expiring within 30 days</p>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(expiringCerts)}" class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Common Name</th>
+                                    <th>Type</th>
+                                    <th>Expires</th>
+                                    <th>Days Left</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="cert : ${expiringCerts}">
+                                    <td>
+                                        <a th:href="@{/certificates/{id}(id=${cert.id})}" th:text="${cert.commonName}">cn</a>
+                                    </td>
+                                    <td><span class="badge-type" th:text="${cert.certificateType.displayName}">Type</span></td>
+                                    <td class="text-mono" th:text="${#temporals.format(cert.notAfter, 'yyyy-MM-dd')}">date</td>
+                                    <td>
+                                        <span th:class="${cert.daysUntilExpiry < 7 ? 'text-danger' : (cert.daysUntilExpiry < 14 ? 'text-warning' : '')}"
+                                              th:text="${cert.daysUntilExpiry + ' days'}">30 days</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Recent Activity</h3>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentActivity)}" class="empty-state" style="padding:30px;">
+                        <p>No recent activity</p>
+                    </div>
+                    <ul class="activity-list" th:unless="${#lists.isEmpty(recentActivity)}">
+                        <li class="activity-item" th:each="log : ${recentActivity}">
+                            <div class="activity-dot"></div>
+                            <div class="activity-content">
+                                <div class="activity-action">
+                                    <strong th:text="${log.action}">ACTION</strong>
+                                    <span class="text-muted" th:text="' — ' + ${log.details}">details</span>
+                                </div>
+                                <div class="activity-time" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}">time</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3>⚡ Quick Actions</h3>
+                </div>
+                <div class="btn-group">
+                    <a th:href="@{/ca/create}" class="btn btn-primary">🏛️ Create CA</a>
+                    <a th:href="@{/certificates/create}" class="btn btn-success">📜 Issue Certificate</a>
+                    <a th:href="@{/csr/submit}" class="btn btn-outline">📝 Submit CSR</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

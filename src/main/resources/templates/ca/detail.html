@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'CA: ' + ${ca.name} + ' | CertMan'">CA Detail | CertMan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar" th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <h2 th:text="${ca.name}">CA Name</h2>
+            <div class="breadcrumb">
+                <a th:href="@{/ca}">Certificate Authorities</a> <span>/</span> <span th:text="${ca.name}">Name</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div th:if="${success}" class="alert alert-success">
+                <span>✅</span> <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert alert-danger">
+                <span>❌</span> <span th:text="${error}"></span>
+            </div>
+
+            <!-- CA Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🏛️ CA Details</h3>
+                    <span class="badge-status"
+                          th:classappend="${ca.status.name() == 'ACTIVE' ? 'badge-active' :
+                                           (ca.status.name() == 'EXPIRED' ? 'badge-expired' : 'badge-revoked')}"
+                          th:text="${ca.status.displayName}">Active</span>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Name</div>
+                        <div class="detail-value" th:text="${ca.name}">name</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value" th:text="${ca.rootCa ? 'Root CA (Self-Signed)' : 'Intermediate CA'}">Root</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Subject DN</div>
+                        <div class="detail-value mono" th:text="${ca.subjectDn}">CN=...</div>
+                    </div>
+                    <div class="detail-item" th:if="${!ca.rootCa}">
+                        <div class="detail-label">Parent CA</div>
+                        <div class="detail-value">
+                            <a th:href="@{/ca/{id}(id=${ca.parentCa.id})}" th:text="${ca.parentCa.name}">Parent</a>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Key Algorithm</div>
+                        <div class="detail-value" th:text="${ca.keyAlgorithm.displayName}">RSA 4096</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Signature Algorithm</div>
+                        <div class="detail-value mono" th:text="${ca.signatureAlgorithm}">SHA384withRSA</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Serial Number</div>
+                        <div class="detail-value mono" th:text="${ca.serialNumber}">01</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valid From</div>
+                        <div class="detail-value" th:text="${#temporals.format(ca.notBefore, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valid Until</div>
+                        <div class="detail-value" th:text="${#temporals.format(ca.notAfter, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Path Length Constraint</div>
+                        <div class="detail-value" th:text="${ca.pathLengthConstraint == -1 ? 'Unlimited' : ca.pathLengthConstraint}">-1</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Created</div>
+                        <div class="detail-value" th:text="${#temporals.format(ca.createdAt, 'yyyy-MM-dd HH:mm:ss')}">date</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Certificates Issued</div>
+                        <div class="detail-value" th:text="${#lists.size(issuedCerts)}">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚡ Actions</h3>
+                </div>
+                <div class="btn-group">
+                    <a th:href="@{/certificates/create(issuingCaId=${ca.id})}" class="btn btn-success">📜 Issue Certificate</a>
+                    <a th:href="@{/ca/{id}/certificate(id=${ca.id})}" class="btn btn-outline" target="_blank">⬇️ Download CA Certificate</a>
+                    <a th:href="@{/ca/create(parentCaId=${ca.id})}" class="btn btn-outline">🏛️ Create Sub-CA</a>
+                </div>
+            </div>
+
+            <!-- CA Certificate PEM -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📄 CA Certificate (PEM)</h3>
+                </div>
+                <div class="pem-block" th:text="${ca.certificatePem}">-----BEGIN CERTIFICATE-----</div>
+            </div>
+
+            <!-- Child CAs -->
+            <div class="card" th:if="${!#lists.isEmpty(childCas)}">
+                <div class="card-header">
+                    <h3>🔗 Subordinate CAs</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Common Name</th><th>Status</th><th>Valid Until</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="child : ${childCas}">
+                                <td><a th:href="@{/ca/{id}(id=${child.id})}" th:text="${child.name}">name</a></td>
+                                <td th:text="${child.commonName}">cn</td>
+                                <td><span class="badge-status" th:classappend="${child.status.name() == 'ACTIVE' ? 'badge-active' : 'badge-expired'}" th:text="${child.status.displayName}">Active</span></td>
+                                <td class="text-mono" th:text="${#temporals.format(child.notAfter, 'yyyy-MM-dd')}">date</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Issued Certificates -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📜 Issued Certificates</h3>
+                </div>
+                <div th:if="${#lists.isEmpty(issuedCerts)}" class="empty-state" style="padding:30px;">
+                    <p>No certificates have been issued by this CA yet.</p>
+                    <a th:href="@{/certificates/create(issuingCaId=${ca.id})}" class="btn btn-sm btn-primary">Issue First Certificate</a>
+                </div>
+                <div th:unless="${#lists.isEmpty(issuedCerts)}" class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Common Name</th><th>Type</th><th>Serial</th><th>Status</th><th>Valid Until</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="cert : ${issuedCerts}">
+                                <td><a th:href="@{/certificates/{id}(id=${cert.id})}" th:text="${cert.commonName}">cn</a></td>
+                                <td><span class="badge-type" th:text="${cert.certificateType.displayName}">Type</span></td>
+                                <td class="text-mono" style="font-size:0.8rem;" th:text="${cert.serialNumber}">01</td>
+                                <td><span class="badge-status" th:classappend="${cert.status.name() == 'ACTIVE' ? 'badge-active' : (cert.status.name() == 'REVOKED' ? 'badge-revoked' : 'badge-expired')}" th:text="${cert.status.displayName}">Active</span></td>
+                                <td class="text-mono" th:text="${#temporals.format(cert.notAfter, 'yyyy-MM-dd')}">date</td>
+                                <td><a th:href="@{/certificates/{id}(id=${cert.id})}" class="btn btn-sm btn-outline">View</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
