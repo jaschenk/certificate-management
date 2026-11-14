@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.8</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
     <groupId>com.certman</groupId>
     <artifactId>certman</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Certificate Management Service</name>
     <description>Enterprise Certificate Management Service based on current PKI standards (X.509, RFC 5280)</description>
 
@@ -68,6 +68,11 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <!-- Spring Boot 4 moved the H2 web console into its own module -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
         </dependency>
 
         <!-- Dev Tools -->

@@ -143,7 +143,7 @@ public class CertificateController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + cert.getCommonName() + ".pem&quot;")
+                        "attachment; filename=\"" + cert.getCommonName() + ".pem\"")
                 .contentType(MediaType.parseMediaType("application/x-pem-file"))
                 .body(cert.getCertificatePem());
     }
@@ -155,7 +155,7 @@ public class CertificateController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + cert.getCommonName() + "-chain.pem&quot;")
+                        "attachment; filename=\"" + cert.getCommonName() + "-chain.pem\"")
                 .contentType(MediaType.parseMediaType("application/x-pem-file"))
                 .body(chain);
     }
@@ -167,7 +167,7 @@ public class CertificateController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + cert.getCommonName() + ".der&quot;")
+                        "attachment; filename=\"" + cert.getCommonName() + ".der\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(der);
     }
@@ -182,7 +182,7 @@ public class CertificateController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + cert.getCommonName() + ".p12&quot;")
+                        "attachment; filename=\"" + cert.getCommonName() + ".p12\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(pkcs12);
     }
@@ -198,7 +198,7 @@ public class CertificateController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + cert.getCommonName() + "-key.pem&quot;")
+                        "attachment; filename=\"" + cert.getCommonName() + "-key.pem\"")
                 .contentType(MediaType.parseMediaType("application/x-pem-file"))
                 .body(cert.getPrivateKeyPem());
     }

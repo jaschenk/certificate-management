@@ -23,11 +23,16 @@ import java.security.Security;
 @EnableScheduling
 public class CertManApplication {
 
-    public static void main(String[] args) {
-        // Register Bouncy Castle as a security provider
+    // Register Bouncy Castle when this class is initialised rather than only in main(),
+    // so the provider is also present when the context is started without main()
+    // (e.g. @SpringBootTest, or a single test class run on its own).
+    static {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
+    }
+
+    public static void main(String[] args) {
         SpringApplication.run(CertManApplication.class, args);
     }
 }

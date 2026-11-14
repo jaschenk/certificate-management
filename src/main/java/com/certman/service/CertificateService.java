@@ -38,6 +38,7 @@ public class CertificateService {
     private final CertificateBuilder certificateBuilder;
     private final CertificateExporter certificateExporter;
     private final PemUtils pemUtils;
+    private final SerialNumberGenerator serialNumberGenerator;
     private final CertManProperties properties;
     private final AuditService auditService;
 
@@ -49,6 +50,7 @@ public class CertificateService {
             CertificateBuilder certificateBuilder,
             CertificateExporter certificateExporter,
             PemUtils pemUtils,
+            SerialNumberGenerator serialNumberGenerator,
             CertManProperties properties,
             AuditService auditService) {
         this.certificateRepository = certificateRepository;
@@ -58,6 +60,7 @@ public class CertificateService {
         this.certificateBuilder = certificateBuilder;
         this.certificateExporter = certificateExporter;
         this.pemUtils = pemUtils;
+        this.serialNumberGenerator = serialNumberGenerator;
         this.properties = properties;
         this.auditService = auditService;
     }
@@ -101,7 +104,7 @@ public class CertificateService {
                 ca.getOrganization(), ca.getLocality(),
                 ca.getState(), ca.getCountry());
 
-        BigInteger serialNumber = BigInteger.valueOf(ca.getAndIncrementSerialNumber());
+        BigInteger serialNumber = serialNumberGenerator.nextSerialNumber();
         String sigAlg = ca.getSignatureAlgorithm();
 
         LocalDateTime notBefore = LocalDateTime.now();
@@ -149,7 +152,6 @@ public class CertificateService {
         cert.setExtendedKeyUsage(extKeyUsageStr);
 
         cert = certificateRepository.save(cert);
-        caRepository.save(ca); // persist updated serial number
 
         auditService.logAction("ISSUE_CERTIFICATE", "Certificate",
                 cert.getId().toString(),
@@ -246,7 +248,7 @@ public class CertificateService {
                 ca.getOrganization(), ca.getLocality(),
                 ca.getState(), ca.getCountry());
 
-        BigInteger serialNumber = BigInteger.valueOf(ca.getAndIncrementSerialNumber());
+        BigInteger serialNumber = serialNumberGenerator.nextSerialNumber();
         String sigAlg = ca.getSignatureAlgorithm();
 
         LocalDateTime notBefore = LocalDateTime.now();
@@ -288,7 +290,6 @@ public class CertificateService {
         cert.setExtendedKeyUsage(getExtKeyUsageString(request.getRequestedType()));
 
         cert = certificateRepository.save(cert);
-        caRepository.save(ca);
 
         // Update the request
         request.setRequestStatus(RequestStatus.APPROVED);

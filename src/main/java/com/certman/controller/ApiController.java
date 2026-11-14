@@ -41,7 +41,7 @@ public class ApiController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=&quot;" + ca.getName() + ".crl&quot;")
+                        "attachment; filename=\"" + ca.getName() + ".crl\"")
                 .contentType(MediaType.parseMediaType("application/pkix-crl"))
                 .body(crlDer);
     }
@@ -64,6 +64,6 @@ public class ApiController {
      */
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("{&quot;status&quot;:&quot;UP&quot;,&quot;service&quot;:&quot;CertMan&quot;}");
+        return ResponseEntity.ok("{\"status\":\"UP\",\"service\":\"CertMan\"}");
     }
 }

@@ -5,6 +5,7 @@ import com.certman.domain.*;
 import com.certman.engine.CertificateBuilder;
 import com.certman.engine.KeyPairGenerator;
 import com.certman.engine.PemUtils;
+import com.certman.engine.SerialNumberGenerator;
 import com.certman.repository.CertificateAuthorityRepository;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ public class CertificateAuthorityService {
     private final KeyPairGenerator keyPairGenerator;
     private final CertificateBuilder certificateBuilder;
     private final PemUtils pemUtils;
+    private final SerialNumberGenerator serialNumberGenerator;
     private final CertManProperties properties;
     private final AuditService auditService;
 
@@ -42,12 +44,14 @@ public class CertificateAuthorityService {
             KeyPairGenerator keyPairGenerator,
             CertificateBuilder certificateBuilder,
             PemUtils pemUtils,
+            SerialNumberGenerator serialNumberGenerator,
             CertManProperties properties,
             AuditService auditService) {
         this.caRepository = caRepository;
         this.keyPairGenerator = keyPairGenerator;
         this.certificateBuilder = certificateBuilder;
         this.pemUtils = pemUtils;
+        this.serialNumberGenerator = serialNumberGenerator;
         this.properties = properties;
         this.auditService = auditService;
     }
@@ -84,7 +88,7 @@ public class CertificateAuthorityService {
         String sigAlg = keyAlgorithm.getDefaultSignatureAlgorithm();
 
         // Serial number
-        BigInteger serialNumber = new BigInteger(128, new java.security.SecureRandom()).abs().setBit(0);
+        BigInteger serialNumber = serialNumberGenerator.nextSerialNumber();
 
         LocalDateTime notBefore = LocalDateTime.now();
         LocalDateTime notAfter = notBefore.plusDays(validityDays > 0 ? validityDays : properties.getDefaults().getCaValidityDays());
@@ -170,7 +174,7 @@ public class CertificateAuthorityService {
                 parentCa.getState(), parentCa.getCountry());
 
         String sigAlg = parentCa.getSignatureAlgorithm();
-        BigInteger serialNumber = BigInteger.valueOf(parentCa.getAndIncrementSerialNumber());
+        BigInteger serialNumber = serialNumberGenerator.nextSerialNumber();
 
         LocalDateTime notBefore = LocalDateTime.now();
         LocalDateTime notAfter = notBefore.plusDays(validityDays > 0 ? validityDays : properties.getDefaults().getCaValidityDays());
@@ -207,7 +211,6 @@ public class CertificateAuthorityService {
         ca.setNextSerialNumber(2L);
 
         ca = caRepository.save(ca);
-        caRepository.save(parentCa); // persist updated serial number
 
         auditService.logAction("CREATE_INTERMEDIATE_CA", "CertificateAuthority",
                 ca.getId().toString(),

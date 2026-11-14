@@ -1,6 +1,6 @@
 # CertMan — Certificate Management Service
 
-A full-featured, enterprise-grade PKI Certificate Management Service built with **Java JDK 25** and **Spring Boot 3.5.x**. Provides a modern dark-themed web UI (Thymeleaf) for managing Certificate Authorities, X.509 certificates, and Certificate Signing Requests.
+A full-featured, enterprise-grade PKI Certificate Management Service built with **Java JDK 25** and **Spring Boot 4.1.2**. Provides a modern dark-themed web UI (Thymeleaf) for managing Certificate Authorities, X.509 certificates, and Certificate Signing Requests.
 
 ---
 
@@ -64,11 +64,11 @@ A full-featured, enterprise-grade PKI Certificate Management Service built with 
 | Layer | Technology |
 |-------|-----------|
 | **Runtime** | Java JDK 25 (OpenJDK 25.0.2) |
-| **Framework** | Spring Boot 3.5.8 |
+| **Framework** | Spring Boot 4.1.2 (Spring Framework 7.0) |
 | **Frontend** | Thymeleaf + Custom CSS (Dark Theme) |
 | **Cryptography** | Bouncy Castle 1.79 (bcprov + bcpkix) |
 | **Database** | H2 (embedded, file-based) — swap to PostgreSQL for production |
-| **ORM** | Spring Data JPA / Hibernate 6.6 |
+| **ORM** | Spring Data JPA / Hibernate 7.4 |
 | **Build** | Maven 3.9.9 |
 
 ---
@@ -91,6 +91,15 @@ java --enable-preview -jar target/certman-1.0.0-SNAPSHOT.jar
 ```
 
 The application starts on **http://localhost:8443/certman**
+
+### Run the Tests
+
+```bash
+mvn clean test                                   # 57 tests
+mvn clean test -Dsurefire.runOrder=alphabetical  # same suite, fixed class order
+```
+
+Certificate and CA serial numbers are random 127-bit values (RFC 5280 §4.1.2.2), unique across all CAs.
 
 ### Default Endpoints
 
@@ -135,6 +144,7 @@ certman/
 │   │   └── DashboardStats.java
 │   ├── engine/                          # Core PKI cryptography
 │   │   ├── KeyPairGenerator.java
+│   │   ├── SerialNumberGenerator.java   # Random certificate serial numbers
 │   │   ├── CertificateBuilder.java      # X.509v3 cert generation
 │   │   ├── CertificateExporter.java     # PEM/DER/PKCS#12 export
 │   │   ├── CrlGenerator.java           # CRL v2 generation
